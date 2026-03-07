@@ -51,13 +51,34 @@ export function createCustomerApiClient({
   // Kick off both discoveries immediately — do not await
   const oidcPromise: Promise<OidcConfig> = fetchFn(
     `${storeUrl}${OIDC_DISCOVERY_PATH}`,
-  ).then((r) => r.json());
+  ).then((r) => {
+    if (!r.ok) {
+      throw new Error(
+        `${CLIENT}: OIDC discovery request failed with status ${r.status}. Ensure the store domain is correct.`,
+      );
+    }
+    return r.json();
+  });
 
   const apiUrlPromise: Promise<string> = fetchFn(
     `${storeUrl}${API_DISCOVERY_PATH}`,
   )
-    .then((r) => r.json())
-    .then((data: {graphql_api: string}) => data.graphql_api);
+    .then((r) => {
+      if (!r.ok) {
+        throw new Error(
+          `${CLIENT}: API discovery request failed with status ${r.status}. Ensure the store domain is correct.`,
+        );
+      }
+      return r.json();
+    })
+    .then((data: {graphql_api: string}) => {
+      if (!data.graphql_api) {
+        throw new Error(
+          `${CLIENT}: API discovery response did not include a graphql_api URL.`,
+        );
+      }
+      return data.graphql_api;
+    });
 
   // Mutable token state (stored in closure, not on frozen config)
   let tokens: CustomerTokenSet | null = null;

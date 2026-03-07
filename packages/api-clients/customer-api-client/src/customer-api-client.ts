@@ -4,14 +4,10 @@ import {
   AUTHORIZATION_HEADER,
   API_DISCOVERY_PATH,
   CLIENT,
-  DEFAULT_CLIENT_VERSION,
   DEFAULT_CONTENT_TYPE,
   DEFAULT_SCOPE,
-  DEFAULT_SDK_VARIANT,
   OIDC_DISCOVERY_PATH,
-  SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
-  SDK_VERSION_HEADER,
 } from './constants';
 import {generateCodeChallenge, generateCodeVerifier, generateRandomString} from './pkce';
 import {
@@ -90,8 +86,6 @@ export function createCustomerApiClient({
   const baseHeaders: Record<string, string> = {
     'Content-Type': DEFAULT_CONTENT_TYPE,
     Accept: DEFAULT_CONTENT_TYPE,
-    [SDK_VARIANT_HEADER]: DEFAULT_SDK_VARIANT,
-    [SDK_VERSION_HEADER]: DEFAULT_CLIENT_VERSION,
     ...(clientName ? {[SDK_VARIANT_SOURCE_HEADER]: clientName} : {}),
   };
 
@@ -113,6 +107,7 @@ export function createCustomerApiClient({
         retries,
         customFetchApi: fetchFn,
         logger,
+        omitSdkHeaders: true,
       });
     }
     return cachedGraphqlClient;

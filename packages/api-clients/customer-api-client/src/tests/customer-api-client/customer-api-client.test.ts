@@ -2,8 +2,6 @@ import {createGraphQLClient} from '@shopify/graphql-client';
 
 import {createCustomerApiClient} from '../../customer-api-client';
 import {
-  DEFAULT_CLIENT_VERSION,
-  DEFAULT_SDK_VARIANT,
   SDK_VARIANT_HEADER,
   SDK_VERSION_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
@@ -147,9 +145,9 @@ describe('Customer API Client', () => {
         expect(client.config.headers).toMatchObject({
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          [SDK_VARIANT_HEADER]: DEFAULT_SDK_VARIANT,
-          [SDK_VERSION_HEADER]: DEFAULT_CLIENT_VERSION,
         });
+        expect(client.config.headers).not.toHaveProperty(SDK_VARIANT_HEADER);
+        expect(client.config.headers).not.toHaveProperty(SDK_VERSION_HEADER);
         expect(client.config.headers).not.toHaveProperty('Authorization');
       });
 

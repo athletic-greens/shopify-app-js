@@ -94,12 +94,14 @@ export interface ClientOptions {
   customFetchApi?: CustomFetchApi;
   retries?: number;
   logger?: Logger;
+  omitSdkHeaders?: boolean;
 }
 
 export interface ClientConfig {
   readonly headers: ClientOptions['headers'];
   readonly url: ClientOptions['url'];
   readonly retries: Required<ClientOptions>['retries'];
+  readonly omitSdkHeaders: boolean;
 }
 
 export interface RequestOptions {

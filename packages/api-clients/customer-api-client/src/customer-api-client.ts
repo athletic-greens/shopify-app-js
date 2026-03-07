@@ -34,6 +34,7 @@ import {
 export function createCustomerApiClient({
   storeDomain,
   clientId,
+  clientSecret,
   redirectUri,
   clientName,
   retries = 0,
@@ -97,6 +98,7 @@ export function createCustomerApiClient({
   const config: CustomerApiClientConfig = {
     storeDomain: storeUrl,
     clientId,
+    ...(clientSecret ? {clientSecret} : {}),
     redirectUri,
     clientName,
     headers: baseHeaders,
@@ -136,9 +138,17 @@ export function createCustomerApiClient({
   ): Promise<CustomerTokenSet> {
     const {token_endpoint} = await oidcPromise;
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+
+    if (clientSecret) {
+      headers['Authorization'] = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
+    }
+
     const response = await fetchFn(token_endpoint, {
       method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      headers,
       body: new URLSearchParams(body).toString(),
     });
 
@@ -180,11 +190,9 @@ export function createCustomerApiClient({
 
     async getAuthorizationUrl(
       params?: GetAuthorizationUrlParams,
-    ): Promise<{url: string; codeVerifier: string; state: string; nonce: string}> {
+    ): Promise<{url: string; codeVerifier?: string; state: string; nonce: string}> {
       const {authorization_endpoint} = await oidcPromise;
 
-      const codeVerifier = await generateCodeVerifier();
-      const codeChallenge = await generateCodeChallenge(codeVerifier);
       const state = params?.state ?? generateRandomString(16);
       const nonce = params?.nonce ?? generateRandomString(16);
       const scope = params?.scope ?? DEFAULT_SCOPE;
@@ -196,19 +204,33 @@ export function createCustomerApiClient({
       url.searchParams.set('scope', scope);
       url.searchParams.set('state', state);
       url.searchParams.set('nonce', nonce);
-      url.searchParams.set('code_challenge', codeChallenge);
-      url.searchParams.set('code_challenge_method', 'S256');
+
+      let codeVerifier: string | undefined;
+      if (!clientSecret) {
+        codeVerifier = await generateCodeVerifier();
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+        url.searchParams.set('code_challenge', codeChallenge);
+        url.searchParams.set('code_challenge_method', 'S256');
+      }
 
       return {url: url.toString(), codeVerifier, state, nonce};
     },
 
     async exchangeCode(params: ExchangeCodeParams): Promise<CustomerTokenSet> {
+      if (!clientSecret && !params.codeVerifier) {
+        throw new Error(
+          `${CLIENT}: codeVerifier is required for public clients. Use the value returned by getAuthorizationUrl().`,
+        );
+      }
+
       const tokenSet = await postToTokenEndpoint({
         grant_type: 'authorization_code',
-        client_id: clientId,
+        ...(!clientSecret ? {client_id: clientId} : {}),
         redirect_uri: redirectUri,
         code: params.code,
-        code_verifier: params.codeVerifier,
+        ...(!clientSecret && params.codeVerifier
+          ? {code_verifier: params.codeVerifier}
+          : {}),
       });
 
       tokens = tokenSet;
@@ -227,7 +249,7 @@ export function createCustomerApiClient({
 
       const tokenSet = await postToTokenEndpoint({
         grant_type: 'refresh_token',
-        client_id: clientId,
+        ...(!clientSecret ? {client_id: clientId} : {}),
         refresh_token: refreshToken,
       });
 

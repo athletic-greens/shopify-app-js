@@ -32,7 +32,12 @@ The UMD builds of each release version are available via the [`unpkg` CDN](https
 
 ## Initialization
 
-The client is safe to use in browser environments — customer tokens are user-scoped and do not need to be kept server-side only.
+The client supports two OAuth client types:
+
+- **Public clients** (browser/mobile apps) — use PKCE for security. Do not provide `clientSecret`.
+- **Confidential clients** (server-side apps) — can securely store a `clientSecret`. Use Basic Auth on token requests; PKCE is omitted.
+
+### Public client (browser / mobile)
 
 ```typescript
 import {createCustomerApiClient} from '@shopify/customer-api-client';
@@ -40,6 +45,22 @@ import {createCustomerApiClient} from '@shopify/customer-api-client';
 const client = createCustomerApiClient({
   storeDomain: 'your-shop-name.myshopify.com',
   clientId: 'your-oauth-client-id',
+  redirectUri: 'https://your-app.example.com/auth/callback',
+});
+```
+
+### Confidential client (server-side)
+
+> [!WARNING]
+> `clientSecret` must never be exposed in a browser environment. Only use confidential clients in server-side code.
+
+```typescript
+import {createCustomerApiClient} from '@shopify/customer-api-client';
+
+const client = createCustomerApiClient({
+  storeDomain: 'your-shop-name.myshopify.com',
+  clientId: 'your-oauth-client-id',
+  clientSecret: 'your-oauth-client-secret',
   redirectUri: 'https://your-app.example.com/auth/callback',
 });
 ```
@@ -55,6 +76,7 @@ The client performs two discovery requests immediately on construction (they are
 | --------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | storeDomain     | `string`                                                                | The domain of the store. Can be the Shopify `myshopify.com` domain or a custom store domain.                                                                                            |
 | clientId        | `string`                                                                | Your app's OAuth client ID.                                                                                                                                                             |
+| clientSecret?   | `string`                                                                | Your app's OAuth client secret. When provided, the client operates as a **confidential client**: token requests use `Authorization: Basic` instead of PKCE, and `code_challenge` is omitted from the authorization URL. **Never expose this value in a browser environment.** |
 | redirectUri     | `string`                                                                | The URI to redirect to after authorization. Must match one of the redirect URIs configured for your app.                                                                                |
 | clientName?     | `string`                                                                | Name of the client. Included in request headers as `X-SDK-Variant-Source`.                                                                                                             |
 | retries?        | `number`                                                                | The number of HTTP request retries if the request was abandoned or the server responded with a `Too Many Requests (429)` or `Service Unavailable (503)` response. Default value is `0`. |
@@ -69,8 +91,8 @@ The client performs two discovery requests immediately on construction (they are
 | getHeaders          | `(headers?: Record<string, string>) => Record<string, string>`                                                                    | Returns Customer API specific headers. If additional `headers` are provided, they are merged into the returned headers object.           |
 | setTokens           | `(tokenSet: CustomerTokenSet) => void`                                                                                            | Stores a token set in the client. Call this to restore tokens after a page reload.                                                      |
 | getTokens           | `() => CustomerTokenSet \| null`                                                                                                  | Returns the currently stored token set, or `null` if no tokens have been set.                                                           |
-| getAuthorizationUrl | `(params?: GetAuthorizationUrlParams) => Promise<GetAuthorizationUrlResult>`                                                      | Generates a PKCE authorization URL. Store the returned `codeVerifier` securely for use in `exchangeCode()`.                             |
-| exchangeCode        | `(params: ExchangeCodeParams) => Promise<CustomerTokenSet>`                                                                       | Exchanges an authorization code for a token set. Automatically calls `setTokens()` with the result.                                    |
+| getAuthorizationUrl | `(params?: GetAuthorizationUrlParams) => Promise<GetAuthorizationUrlResult>`                                                      | Generates an authorization URL. For public clients, includes PKCE params and returns a `codeVerifier` to store. For confidential clients, PKCE is omitted and `codeVerifier` is `undefined`. |
+| exchangeCode        | `(params: ExchangeCodeParams) => Promise<CustomerTokenSet>`                                                                       | Exchanges an authorization code for a token set. Automatically calls `setTokens()` with the result. `codeVerifier` is required for public clients.                                    |
 | refreshToken        | `(params?: RefreshTokenParams) => Promise<CustomerTokenSet>`                                                                      | Refreshes the access token using a refresh token. Uses the stored refresh token if `params.refreshToken` is not provided. Calls `setTokens()` with the result. |
 | getLogoutUrl        | `(params?: {idToken?: string; postLogoutRedirectUri?: string}) => Promise<string>`                                                | Returns the end-session URL. Uses the stored `idToken` if `params.idToken` is not provided.                                             |
 | fetch               | `(operation: string, options?: CustomerRequestOptions) => Promise<Response>`                                                      | Fetches data from the Customer Account API. Uses the stored access token unless `options.customerAccessToken` is provided.              |
@@ -78,13 +100,14 @@ The client performs two discovery requests immediately on construction (they are
 
 ## `CustomerApiClientConfig` properties
 
-| Name        | Type                       | Description                                                      |
-| ----------- | -------------------------- | ---------------------------------------------------------------- |
-| storeDomain | `string`                   | The normalized store domain URL                                  |
-| clientId    | `string`                   | The OAuth client ID                                              |
-| redirectUri | `string`                   | The OAuth redirect URI                                           |
-| clientName? | `string`                   | The provided client name                                         |
-| headers     | `Record<string, string>`   | The base headers generated by the client during initialization   |
+| Name          | Type                       | Description                                                      |
+| ------------- | -------------------------- | ---------------------------------------------------------------- |
+| storeDomain   | `string`                   | The normalized store domain URL                                  |
+| clientId      | `string`                   | The OAuth client ID                                              |
+| clientSecret? | `string`                   | The OAuth client secret (confidential clients only)              |
+| redirectUri   | `string`                   | The OAuth redirect URI                                           |
+| clientName?   | `string`                   | The provided client name                                         |
+| headers       | `Record<string, string>`   | The base headers generated by the client during initialization   |
 
 ## `CustomerRequestOptions` properties
 
@@ -115,12 +138,12 @@ The client performs two discovery requests immediately on construction (they are
 
 ## `GetAuthorizationUrlResult`
 
-| Name         | Type     | Description                                                                     |
-| ------------ | -------- | ------------------------------------------------------------------------------- |
-| url          | `string` | The authorization URL to redirect the customer to                               |
-| codeVerifier | `string` | The PKCE code verifier. Store this securely and pass it to `exchangeCode()`     |
-| state        | `string` | The state parameter used in the authorization request                           |
-| nonce        | `string` | The nonce parameter used in the authorization request                           |
+| Name          | Type               | Description                                                                                                        |
+| ------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| url           | `string`           | The authorization URL to redirect the customer to                                                                  |
+| codeVerifier? | `string`           | The PKCE code verifier. Only present for public clients. Store this securely and pass it to `exchangeCode()`.      |
+| state         | `string`           | The state parameter used in the authorization request                                                              |
+| nonce         | `string`           | The nonce parameter used in the authorization request                                                              |
 
 ## `ClientResponse<TData>`
 
@@ -179,6 +202,32 @@ const tokenSet = await client.exchangeCode({
 
 // Persist tokens for future page loads (e.g., localStorage, cookies)
 localStorage.setItem('customerTokens', JSON.stringify(tokenSet));
+```
+
+### Confidential client OAuth flow (server-side)
+
+```typescript
+import {createCustomerApiClient} from '@shopify/customer-api-client';
+
+// Server-side only — never expose clientSecret in a browser
+const client = createCustomerApiClient({
+  storeDomain: 'your-shop-name.myshopify.com',
+  clientId: 'your-oauth-client-id',
+  clientSecret: 'your-oauth-client-secret',
+  redirectUri: 'https://your-app.example.com/auth/callback',
+});
+
+// Step 1: Generate the authorization URL (no PKCE — codeVerifier is undefined)
+const {url, state} = await client.getAuthorizationUrl();
+// Store state in the session for CSRF validation
+req.session.oauthState = state;
+res.redirect(url);
+
+// Step 2: On the callback route, exchange the authorization code for tokens
+// No codeVerifier needed for confidential clients
+const tokenSet = await client.exchangeCode({code: req.query.code});
+// Store tokens in the session or database
+req.session.customerTokens = tokenSet;
 ```
 
 ### Restore tokens after a page reload

@@ -560,4 +560,153 @@ describe('Customer API Client', () => {
       });
     });
   });
+
+  describe('confidential client (clientSecret provided)', () => {
+    const clientSecret = 'super-secret';
+    const confidentialConfig = {...config, clientSecret};
+    let fetchMock: jest.Mock;
+
+    beforeEach(() => {
+      fetchMock = mockFetch();
+      (global as any).fetch = fetchMock;
+      (createGraphQLClient as jest.Mock).mockReturnValue(graphqlClientMock);
+      const pkce = jest.requireMock('../../pkce');
+      pkce.generateCodeVerifier.mockResolvedValue('mock-code-verifier');
+      pkce.generateCodeChallenge.mockResolvedValue('mock-code-challenge');
+      pkce.generateRandomString.mockReturnValue('mock-random');
+    });
+
+    afterEach(() => {
+      jest.resetAllMocks();
+      jest.restoreAllMocks();
+    });
+
+    it('exposes clientSecret on config', () => {
+      const client = createCustomerApiClient(confidentialConfig);
+      expect(client.config.clientSecret).toBe(clientSecret);
+    });
+
+    describe('getAuthorizationUrl()', () => {
+      it('does not include code_challenge or code_challenge_method', async () => {
+        const client = createCustomerApiClient(confidentialConfig);
+        const result = await client.getAuthorizationUrl();
+        const url = new URL(result.url);
+
+        expect(url.searchParams.has('code_challenge')).toBe(false);
+        expect(url.searchParams.has('code_challenge_method')).toBe(false);
+      });
+
+      it('does not return a codeVerifier', async () => {
+        const client = createCustomerApiClient(confidentialConfig);
+        const result = await client.getAuthorizationUrl();
+        expect(result.codeVerifier).toBeUndefined();
+      });
+
+      it('still includes required OAuth params', async () => {
+        const client = createCustomerApiClient(confidentialConfig);
+        const result = await client.getAuthorizationUrl();
+        const url = new URL(result.url);
+
+        expect(url.searchParams.get('client_id')).toBe(clientId);
+        expect(url.searchParams.get('response_type')).toBe('code');
+        expect(url.searchParams.get('redirect_uri')).toBe(redirectUri);
+        expect(url.searchParams.get('state')).toBeTruthy();
+        expect(url.searchParams.get('nonce')).toBeTruthy();
+      });
+    });
+
+    describe('exchangeCode()', () => {
+      it('sends Basic Authorization header instead of client_id in body', async () => {
+        const client = createCustomerApiClient(confidentialConfig);
+        await client.exchangeCode({code: 'auth-code'});
+
+        const tokenCall = fetchMock.mock.calls.find(
+          ([url]: [string]) => url === mockOidcConfig.token_endpoint,
+        );
+        const [, options] = tokenCall;
+        const expectedBasic = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
+        expect(options.headers['Authorization']).toBe(expectedBasic);
+
+        const body = new URLSearchParams(options.body);
+        expect(body.has('client_id')).toBe(false);
+      });
+
+      it('does not send code_verifier in body', async () => {
+        const client = createCustomerApiClient(confidentialConfig);
+        await client.exchangeCode({code: 'auth-code'});
+
+        const tokenCall = fetchMock.mock.calls.find(
+          ([url]: [string]) => url === mockOidcConfig.token_endpoint,
+        );
+        const body = new URLSearchParams(tokenCall[1].body);
+        expect(body.has('code_verifier')).toBe(false);
+      });
+
+      it('does not throw when codeVerifier is omitted', async () => {
+        const client = createCustomerApiClient(confidentialConfig);
+        await expect(
+          client.exchangeCode({code: 'auth-code'}),
+        ).resolves.toBeDefined();
+      });
+    });
+
+    describe('refreshToken()', () => {
+      it('sends Basic Authorization header instead of client_id in body', async () => {
+        const client = createCustomerApiClient(confidentialConfig);
+        client.setTokens({accessToken: 'x', refreshToken: 'stored-refresh'});
+        await client.refreshToken();
+
+        const tokenCall = fetchMock.mock.calls.find(
+          ([url]: [string]) => url === mockOidcConfig.token_endpoint,
+        );
+        const [, options] = tokenCall;
+        const expectedBasic = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
+        expect(options.headers['Authorization']).toBe(expectedBasic);
+
+        const body = new URLSearchParams(options.body);
+        expect(body.has('client_id')).toBe(false);
+      });
+    });
+  });
+
+  describe('public client (no clientSecret)', () => {
+    let fetchMock: jest.Mock;
+
+    beforeEach(() => {
+      fetchMock = mockFetch();
+      (global as any).fetch = fetchMock;
+      (createGraphQLClient as jest.Mock).mockReturnValue(graphqlClientMock);
+      const pkce = jest.requireMock('../../pkce');
+      pkce.generateCodeVerifier.mockResolvedValue('mock-code-verifier');
+      pkce.generateCodeChallenge.mockResolvedValue('mock-code-challenge');
+      pkce.generateRandomString.mockReturnValue('mock-random');
+    });
+
+    afterEach(() => {
+      jest.resetAllMocks();
+      jest.restoreAllMocks();
+    });
+
+    it('throws if codeVerifier is missing in exchangeCode()', async () => {
+      const client = createCustomerApiClient(config);
+      await expect(client.exchangeCode({code: 'auth-code'})).rejects.toThrow(
+        'Customer API Client: codeVerifier is required for public clients',
+      );
+    });
+
+    it('sends client_id and code_verifier in body (no Authorization header)', async () => {
+      const client = createCustomerApiClient(config);
+      await client.exchangeCode({code: 'auth-code', codeVerifier: 'verifier'});
+
+      const tokenCall = fetchMock.mock.calls.find(
+        ([url]: [string]) => url === mockOidcConfig.token_endpoint,
+      );
+      const [, options] = tokenCall;
+      expect(options.headers['Authorization']).toBeUndefined();
+
+      const body = new URLSearchParams(options.body);
+      expect(body.get('client_id')).toBe(clientId);
+      expect(body.get('code_verifier')).toBe('verifier');
+    });
+  });
 });

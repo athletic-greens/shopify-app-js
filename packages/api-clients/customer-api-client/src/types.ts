@@ -10,6 +10,7 @@ export type CustomerApiClientLogContentTypes = ApiClientLogContentTypes;
 export interface CustomerApiClientConfig {
   storeDomain: string;
   clientId: string;
+  clientSecret?: string;
   redirectUri: string;
   clientName?: string;
   headers: Record<string, string>;
@@ -18,6 +19,8 @@ export interface CustomerApiClientConfig {
 export interface CustomerApiClientOptions {
   storeDomain: string;
   clientId: string;
+  /** Optional client secret for confidential clients (server-side apps). When provided, the client uses Basic Auth on token requests and omits PKCE. */
+  clientSecret?: string;
   redirectUri: string;
   clientName?: string;
   retries?: number;
@@ -48,14 +51,16 @@ export interface GetAuthorizationUrlParams {
 
 export interface GetAuthorizationUrlResult {
   url: string;
-  codeVerifier: string;
+  /** The PKCE code verifier to store for use in `exchangeCode()`. Only present for public clients (when no `clientSecret` was provided). */
+  codeVerifier?: string;
   state: string;
   nonce: string;
 }
 
 export interface ExchangeCodeParams {
   code: string;
-  codeVerifier: string;
+  /** Required for public clients. Omit for confidential clients (when `clientSecret` was provided at construction). */
+  codeVerifier?: string;
 }
 
 export interface RefreshTokenParams {

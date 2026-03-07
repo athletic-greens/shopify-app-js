@@ -448,7 +448,7 @@ describe('Customer API Client', () => {
           query,
           expect.objectContaining({
             headers: expect.objectContaining({
-              Authorization: 'Bearer stored-token',
+              Authorization: 'stored-token',
             }),
           }),
         );
@@ -466,7 +466,7 @@ describe('Customer API Client', () => {
           query,
           expect.objectContaining({
             headers: expect.objectContaining({
-              Authorization: 'Bearer per-request-token',
+              Authorization: 'per-request-token',
             }),
           }),
         );
@@ -540,7 +540,7 @@ describe('Customer API Client', () => {
           query,
           expect.objectContaining({
             headers: expect.objectContaining({
-              Authorization: 'Bearer stored-token',
+              Authorization: 'stored-token',
             }),
           }),
         );

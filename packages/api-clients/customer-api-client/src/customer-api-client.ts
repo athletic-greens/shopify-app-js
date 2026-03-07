@@ -302,7 +302,7 @@ export function createCustomerApiClient({
         ...(url ? {url} : {}),
         headers: {
           ...headers,
-          [AUTHORIZATION_HEADER]: `Bearer ${accessToken}`,
+          [AUTHORIZATION_HEADER]: accessToken,
         },
       });
     },
@@ -331,7 +331,7 @@ export function createCustomerApiClient({
         ...(url ? {url} : {}),
         headers: {
           ...headers,
-          [AUTHORIZATION_HEADER]: `Bearer ${accessToken}`,
+          [AUTHORIZATION_HEADER]: accessToken,
         },
       });
     },

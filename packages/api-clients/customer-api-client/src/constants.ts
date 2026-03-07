@@ -13,5 +13,4 @@ export const CLIENT = 'Customer API Client';
 export const OIDC_DISCOVERY_PATH = '/.well-known/openid-configuration';
 export const API_DISCOVERY_PATH = '/.well-known/customer-account-api';
 
-export const DEFAULT_SCOPE =
-  'openid email https://api.customers.com/auth/customer.graphql';
+export const DEFAULT_SCOPE = 'openid email customer-account-api:full';

@@ -132,7 +132,7 @@ The client performs two discovery requests immediately on construction (they are
 
 | Name    | Type     | Description                                                                                  |
 | ------- | -------- | -------------------------------------------------------------------------------------------- |
-| scope?  | `string` | OAuth scopes to request. Defaults to `openid email https://api.customers.com/auth/customer.graphql` |
+| scope?  | `string` | OAuth scopes to request. Defaults to `openid email customer-account-api:full` |
 | state?  | `string` | Random string to prevent CSRF attacks. Generated automatically if not provided.              |
 | nonce?  | `string` | Random string for replay attack prevention. Generated automatically if not provided.         |
 

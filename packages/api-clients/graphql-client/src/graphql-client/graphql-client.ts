@@ -41,7 +41,6 @@ export function createGraphQLClient({
   customFetchApi = fetch,
   retries = 0,
   logger,
-  omitSdkHeaders = false,
 }: ClientOptions): GraphQLClient {
   validateRetries({client: CLIENT, retries});
 
@@ -49,7 +48,6 @@ export function createGraphQLClient({
     headers,
     url,
     retries,
-    omitSdkHeaders,
   };
 
   const clientLogger = generateClientLogger(logger);
@@ -105,7 +103,7 @@ async function processJSONResponse<TData = any>(
 
 function generateFetch(
   httpFetch: ReturnType<typeof generateHttpFetch>,
-  {url, headers, retries, omitSdkHeaders}: ClientConfig,
+  {url, headers, retries}: ClientConfig,
 ): GraphQLClient['fetch'] {
   return async (operation, options = {}) => {
     const {
@@ -132,11 +130,7 @@ function generateFetch(
       return headers;
     }, {});
 
-    if (
-      !omitSdkHeaders &&
-      !flatHeaders[SDK_VARIANT_HEADER] &&
-      !flatHeaders[SDK_VERSION_HEADER]
-    ) {
+    if (!flatHeaders[SDK_VARIANT_HEADER] && !flatHeaders[SDK_VERSION_HEADER]) {
       flatHeaders[SDK_VARIANT_HEADER] = DEFAULT_SDK_VARIANT;
       flatHeaders[SDK_VERSION_HEADER] = DEFAULT_CLIENT_VERSION;
     }

@@ -7,10 +7,13 @@ import {
   DEFAULT_CONTENT_TYPE,
   DEFAULT_SCOPE,
   OIDC_DISCOVERY_PATH,
+  SDK_VARIANT_HEADER,
   SDK_VARIANT_SOURCE_HEADER,
+  SDK_VERSION_HEADER,
 } from './constants';
 import {generateCodeChallenge, generateCodeVerifier, generateRandomString} from './pkce';
 import {
+  CustomFetchApi,
   CustomerApiClient,
   CustomerApiClientConfig,
   CustomerApiClientOptions,
@@ -98,6 +101,18 @@ export function createCustomerApiClient({
     headers: baseHeaders,
   };
 
+  // Wrap fetch to strip SDK telemetry headers that are blocked by the
+  // Customer Account API's CORS policy (unlike the Storefront API).
+  const graphqlFetchFn: CustomFetchApi = (url, init) => {
+    if (init?.headers) {
+      const headers = {...(init.headers as Record<string, string>)};
+      delete headers[SDK_VARIANT_HEADER];
+      delete headers[SDK_VERSION_HEADER];
+      return fetchFn(url, {...init, headers});
+    }
+    return fetchFn(url, init);
+  };
+
   async function getGraphqlClient() {
     if (!cachedGraphqlClient) {
       const apiUrl = await apiUrlPromise;
@@ -105,9 +120,8 @@ export function createCustomerApiClient({
         headers: baseHeaders,
         url: apiUrl,
         retries,
-        customFetchApi: fetchFn,
+        customFetchApi: graphqlFetchFn,
         logger,
-        omitSdkHeaders: true,
       });
     }
     return cachedGraphqlClient;

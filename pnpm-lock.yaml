@@ -148,6 +148,25 @@ importers:
         specifier: ^6.3.0
         version: 6.3.0(rollup@4.57.1)(typescript@5.8.3)
 
+  packages/api-clients/customer-api-client:
+    dependencies:
+      '@shopify/graphql-client':
+        specifier: ^1.4.1
+        version: link:../graphql-client
+    devDependencies:
+      '@babel/preset-env':
+        specifier: ^7.28.6
+        version: 7.28.6(@babel/core@7.29.0)
+      '@shopify/babel-preset':
+        specifier: ^25.0.2
+        version: 25.0.2
+      jest-environment-jsdom:
+        specifier: ^30.2.0
+        version: 30.2.0
+      rollup-plugin-dts:
+        specifier: ^6.3.0
+        version: 6.3.0(rollup@4.57.1)(typescript@5.8.3)
+
   packages/api-clients/graphql-client:
     devDependencies:
       '@babel/preset-env':

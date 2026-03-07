@@ -1,0 +1,104 @@
+{
+  "name": "@shopify/customer-api-client",
+  "version": "0.0.1",
+  "description": "Shopify Customer API Client - A lightweight JS client to interact with Shopify's Customer Account API",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/shopify-app-js.git",
+    "directory": "packages/api-clients/customer-api-client"
+  },
+  "author": "Shopify",
+  "license": "MIT",
+  "main": "./dist/umd/customer-api-client.min.js",
+  "browser": "./dist/umd/customer-api-client.min.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/customer-api-client.d.ts",
+  "exports": {
+    ".": {
+      "module": {
+        "types": "./dist/ts/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "import": {
+        "types": "./dist/ts/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/ts/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "build": "pnpm tsc -p ./tsconfig.build.json && pnpm rollup",
+    "tsc": "tsc",
+    "test": "jest",
+    "test:ci": "pnpm test",
+    "rollup": "rollup -c --bundleConfigAsCjs",
+    "clean": "rimraf dist/*",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "jest": {
+    "testPathIgnorePatterns": ["\\.rollup\\.cache"],
+    "projects": [
+      {
+        "displayName": {
+          "name": "test:browser",
+          "color": "blue"
+        },
+        "testEnvironment": "jsdom",
+        "testPathIgnorePatterns": [
+          "\\.rollup\\.cache",
+          "(/__tests__/.*|(\\.|/)server(\\.|/)(test|spec))\\.[jt]sx?$"
+        ]
+      },
+      {
+        "displayName": {
+          "name": "test:server",
+          "color": "yellow"
+        },
+        "testPathIgnorePatterns": [
+          "\\.rollup\\.cache",
+          "(/__tests__/.*|(\\.|/)browser(\\.|/)(test|spec))\\.[jt]sx?$"
+        ]
+      }
+    ],
+    "transform": {
+      ".*": "babel-jest"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "shopify",
+    "node",
+    "graphql",
+    "Customer Account API"
+  ],
+  "files": [
+    "dist/**/*.*",
+    "src",
+    "!src/**/__tests__",
+    "!src/**/*.test.ts",
+    "!src/**/tests",
+    "!node_modules"
+  ],
+  "dependencies": {
+    "@shopify/graphql-client": "^1.4.1"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.28.6",
+    "@shopify/babel-preset": "^25.0.2",
+    "jest-environment-jsdom": "^30.2.0",
+    "rollup-plugin-dts": "^6.3.0"
+  },
+  "bugs": {
+    "url": "https://github.com/Shopify/shopify-app-js/issues"
+  },
+  "homepage": "https://github.com/Shopify/shopify-app-js/tree/main/packages/api-clients/customer-api-client#readme"
+}

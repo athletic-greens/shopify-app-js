@@ -17,6 +17,8 @@ import {
   CustomerApiClient,
   CustomerApiClientConfig,
   CustomerApiClientOptions,
+  CustomerApiClientRequestOptions,
+  CustomerOperations,
   CustomerRequestOptions,
   CustomerTokenSet,
   ExchangeCodeParams,
@@ -287,11 +289,13 @@ export function createCustomerApiClient({
       return url.toString();
     },
 
-    async fetch(
-      operation: string,
-      options?: CustomerRequestOptions,
+    async fetch<Operation extends keyof CustomerOperations = string>(
+      operation: Operation,
+      options?: CustomerApiClientRequestOptions<Operation, CustomerOperations>,
     ): Promise<Response> {
-      const accessToken = resolveAccessToken(options);
+      const accessToken = resolveAccessToken(
+        options as CustomerRequestOptions | undefined,
+      );
       const graphqlClient = await getGraphqlClient();
 
       const {
@@ -299,14 +303,14 @@ export function createCustomerApiClient({
         apiVersion,
         headers,
         ...restOptions
-      } = options ?? {};
+      } = (options ?? {}) as CustomerRequestOptions;
 
       const baseUrl = await apiUrlPromise;
       const url = apiVersion
         ? replaceVersionInUrl(baseUrl, apiVersion)
         : undefined;
 
-      return graphqlClient.fetch(operation, {
+      return graphqlClient.fetch(operation as string, {
         ...restOptions,
         ...(url ? {url} : {}),
         headers: {
@@ -316,11 +320,13 @@ export function createCustomerApiClient({
       });
     },
 
-    async request<TData = unknown>(
-      operation: string,
-      options?: CustomerRequestOptions,
+    async request<TData = undefined, Operation extends keyof CustomerOperations = string>(
+      operation: Operation,
+      options?: CustomerApiClientRequestOptions<Operation, CustomerOperations>,
     ) {
-      const accessToken = resolveAccessToken(options);
+      const accessToken = resolveAccessToken(
+        options as CustomerRequestOptions | undefined,
+      );
       const graphqlClient = await getGraphqlClient();
 
       const {
@@ -328,14 +334,14 @@ export function createCustomerApiClient({
         apiVersion,
         headers,
         ...restOptions
-      } = options ?? {};
+      } = (options ?? {}) as CustomerRequestOptions;
 
       const baseUrl = await apiUrlPromise;
       const url = apiVersion
         ? replaceVersionInUrl(baseUrl, apiVersion)
         : undefined;
 
-      return graphqlClient.request<TData>(operation, {
+      return graphqlClient.request<TData>(operation as string, {
         ...restOptions,
         ...(url ? {url} : {}),
         headers: {

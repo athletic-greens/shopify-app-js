@@ -6,6 +6,10 @@ export type {
   CustomerApiClientOptions,
   CustomerTokenSet,
   CustomerRequestOptions,
+  CustomerRequestBaseOptions,
+  CustomerApiClientRequest,
+  CustomerApiClientFetch,
+  CustomerApiClientRequestOptions,
   GetAuthorizationUrlParams,
   GetAuthorizationUrlResult,
   ExchangeCodeParams,
@@ -18,3 +22,13 @@ export type {
   CustomFetchApi,
   ClientResponse,
 } from './types';
+
+export type {
+  AllOperations,
+  FetchResponseBody,
+  HTTPResponseLog,
+  HTTPRetryLog,
+  LogContent,
+  ResponseWithType,
+  ReturnData,
+} from '@shopify/graphql-client';

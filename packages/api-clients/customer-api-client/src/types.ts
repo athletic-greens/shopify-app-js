@@ -3,6 +3,9 @@ import {
   ApiClientLogger,
   ApiClientLogContentTypes,
   ClientResponse,
+  AllOperations,
+  OperationVariables,
+  ReturnData,
 } from '@shopify/graphql-client';
 
 export type CustomerApiClientLogContentTypes = ApiClientLogContentTypes;
@@ -67,14 +70,19 @@ export interface RefreshTokenParams {
   refreshToken: string;
 }
 
-export interface CustomerRequestOptions {
+/** Base request options without variables (variables are typed per-operation). */
+export type CustomerRequestBaseOptions = {
   customerAccessToken?: string;
-  variables?: Record<string, unknown>;
   headers?: Record<string, string>;
   apiVersion?: string;
   retries?: number;
   signal?: AbortSignal;
-}
+};
+
+/** Full request options — used when the operation is not in the type registry. */
+export type CustomerRequestOptions = CustomerRequestBaseOptions & {
+  variables?: Record<string, unknown>;
+};
 
 export interface CustomerQueries {
   [key: string]: {variables: any; return: any};
@@ -87,6 +95,31 @@ export interface CustomerMutations {
 }
 
 export type CustomerOperations = CustomerQueries & CustomerMutations;
+
+/** Typed request options: base options merged with the operation's variable types when known. */
+export type CustomerApiClientRequestOptions<
+  Operation extends keyof Operations,
+  Operations extends AllOperations,
+> = CustomerRequestBaseOptions &
+  (Operation extends keyof Operations
+    ? OperationVariables<Operation, Operations>
+    : {variables?: Record<string, any>});
+
+export type CustomerApiClientRequest<
+  Operations extends AllOperations = AllOperations,
+> = <TData = undefined, Operation extends keyof Operations = string>(
+  operation: Operation,
+  options?: CustomerApiClientRequestOptions<Operation, Operations>,
+) => Promise<
+  ClientResponse<TData extends undefined ? ReturnData<Operation, Operations> : TData>
+>;
+
+export type CustomerApiClientFetch<
+  Operations extends AllOperations = AllOperations,
+> = <Operation extends keyof Operations = string>(
+  operation: Operation,
+  options?: CustomerApiClientRequestOptions<Operation, Operations>,
+) => Promise<Response>;
 
 export interface CustomerApiClient {
   readonly config: Readonly<CustomerApiClientConfig>;
@@ -105,11 +138,8 @@ export interface CustomerApiClient {
     postLogoutRedirectUri?: string;
   }): Promise<string>;
 
-  fetch(operation: string, options?: CustomerRequestOptions): Promise<Response>;
-  request<TData = unknown>(
-    operation: string,
-    options?: CustomerRequestOptions,
-  ): Promise<ClientResponse<TData>>;
+  fetch: CustomerApiClientFetch<CustomerOperations>;
+  request: CustomerApiClientRequest<CustomerOperations>;
 }
 
 export type {CustomFetchApi, ClientResponse};

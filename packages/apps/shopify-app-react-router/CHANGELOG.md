@@ -1,5 +1,22 @@
 # @shopify/shopify-app-react-router
 
+## 1.2.1
+
+### Patch Changes
+
+- a71dc5c: Add @publicDocs JSDoc tags to top-level types and upgrade @shopify/generate-docs to v1.1.0 to enable v2 documentation pipeline.
+- e510582: Updated `@graphql-codegen/introspection`, ` @graphql-codegen/typescript`, ` isbot` dependencies
+- e4db082: Add `webhookId` (`shopify-webhook-id`) as a required field on Events webhooks. This is the true idempotency key for webhook deliveries. Previously, only `eventId` was extracted for Events webhooks and was used as a fallback for `webhookId` in downstream packages. This is no longer true. Both fields now coexist and represent distinct values.
+- 0bdc123: `AppProxyLink` now uses `forwardRef`, allowing consumers to attach a ref to the
+  underlying `<a>` element (e.g. `anchor.current.focus()`).
+- 1a6c3bf: Fixed an issue where `authenticate.admin(request).redirect(...)` could propagate embedded request parameters (including the session token) to a cross-origin destination when given a protocol-relative or backslash-prefixed URL. The same-origin check now uses the resolved URL's origin rather than a lexical prefix match, so only genuine same-origin redirects inherit request parameters.
+- Updated dependencies [9264a64]
+- Updated dependencies [e510582]
+- Updated dependencies [e4db082]
+- Updated dependencies [7ec655a]
+  - @shopify/shopify-api@13.1.0
+  - @shopify/shopify-app-session-storage@5.0.1
+
 ## 1.2.0
 
 ### Minor Changes

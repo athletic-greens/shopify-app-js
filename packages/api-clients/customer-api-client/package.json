@@ -1,6 +1,6 @@
 {
   "name": "@athleticgreens/customer-api-client",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Shopify Customer API Client - A lightweight JS client to interact with Shopify's Customer Account API",
   "repository": {
     "type": "git",

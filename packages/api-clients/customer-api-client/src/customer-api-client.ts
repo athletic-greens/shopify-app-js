@@ -233,7 +233,7 @@ export function createCustomerApiClient({
     config,
 
     getHeaders(customHeaders?: Record<string, string>): Record<string, string> {
-      return {...(customHeaders ?? {}), ...baseHeaders};
+      return {...customHeaders, ...baseHeaders};
     },
 
     setTokens(tokenSet: CustomerTokenSet): void {

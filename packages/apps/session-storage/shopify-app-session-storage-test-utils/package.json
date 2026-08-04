@@ -1,6 +1,6 @@
 {
   "name": "@shopify/shopify-app-session-storage-test-utils",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Utilities for testing Shopify App Session Storage",
   "repository": {
     "type": "git",
@@ -17,7 +17,6 @@
   "module": "./dist/esm/index.mjs",
   "types": "./dist/ts/index.d.ts",
   "scripts": {
-    "lint": "eslint .",
     "build": "pnpm rollup && pnpm tsc -p ./tsconfig.build.json",
     "tsc": "tsc",
     "test": "jest",
@@ -50,8 +49,8 @@
     "@shopify/shopify-app-session-storage": "^5.0.0"
   },
   "devDependencies": {
-    "@shopify/shopify-api": "^13.0.0",
-    "@shopify/shopify-app-session-storage": "^5.0.0"
+    "@shopify/shopify-api": "^13.1.0",
+    "@shopify/shopify-app-session-storage": "^5.0.1"
   },
   "files": [
     "dist/*",

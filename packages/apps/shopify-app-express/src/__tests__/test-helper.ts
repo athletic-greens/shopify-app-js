@@ -3,6 +3,11 @@ import crypto from 'crypto';
 import {compare} from 'compare-versions';
 import fetchMock, {MockParams} from 'jest-fetch-mock';
 import {ApiVersion, ShopifyRestResources} from '@shopify/shopify-api';
+import {
+  Cookies,
+  NormalizedRequest,
+  NormalizedResponse,
+} from '@shopify/shopify-api/runtime';
 import {MemorySessionStorage} from '@shopify/shopify-app-session-storage-memory';
 
 import {shopifyApp, ShopifyApp} from '../index';
@@ -44,7 +49,7 @@ beforeEach(() => {
       apiKey: 'testApiKey',
       apiSecretKey: 'testApiSecretKey',
       scopes: ['testScope'],
-      apiVersion: ApiVersion.July25,
+      apiVersion: ApiVersion.July26,
       hostScheme: 'https',
       hostName: 'my-test-app.myshopify.io',
       logger: {
@@ -141,7 +146,7 @@ expect.extend({
         if (typeof mockBody === 'string') {
           try {
             requestBody = JSON.parse(mockBody);
-          } catch (error) {
+          } catch (_error) {
             // Not JSON, that's fine
           }
         }
@@ -185,7 +190,7 @@ export function validWebhookHeaders(
     'X-Shopify-Shop-Domain': TEST_SHOP,
     'X-Shopify-Hmac-Sha256': hmac,
     'X-Shopify-Webhook-Id': TEST_WEBHOOK_ID,
-    'X-Shopify-Api-Version': ApiVersion.July25,
+    'X-Shopify-Api-Version': ApiVersion.July26,
   };
 }
 
@@ -194,6 +199,22 @@ export function createTestHmac(secretKey: string, body: string): string {
     .createHmac('sha256', secretKey)
     .update(body, 'utf8')
     .digest('base64');
+}
+
+export async function createSignedCookieHeader(
+  secretKey: string,
+  name: string,
+  value: string,
+): Promise<string[]> {
+  const cookies = new Cookies(
+    {headers: {}} as NormalizedRequest,
+    {} as NormalizedResponse,
+    {keys: [secretKey]},
+  );
+
+  await cookies.setAndSign(name, value);
+
+  return cookies.toHeaders().map((cookie) => cookie.split(';')[0]);
 }
 
 test('passes test deprecation checks', () => {

@@ -89,9 +89,7 @@ export function shopifyApp<
   });
 
   const shopify:
-    | AdminApp<Config>
-    | AppStoreApp<Config>
-    | SingleMerchantApp<Config> = {
+    AdminApp<Config> | AppStoreApp<Config> | SingleMerchantApp<Config> = {
     sessionStorage: config.sessionStorage,
     addDocumentResponseHeaders: addDocumentResponseHeadersFactory(params),
     registerWebhooks: registerWebhooksFactory(params),
@@ -140,7 +138,7 @@ export function deriveApi(appConfig: AppConfigArg): BasicParams['api'] {
   let appUrl: URL;
   try {
     appUrl = new URL(appConfig.appUrl);
-  } catch (error) {
+  } catch (_error) {
     const message =
       appConfig.appUrl === ''
         ? `Detected an empty appUrl configuration, please make sure to set the necessary environment variables.\n` +

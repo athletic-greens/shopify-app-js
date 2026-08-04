@@ -1,11 +1,11 @@
 {
   "name": "@shopify/api-codegen-preset",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Preset for graphql-codegen to parse and type queries to Shopify APIs",
   "author": "Shopify",
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "homepage": "https://github.com/Shopify/shopify-app-js/tree/main/packages/api-clients/api-codegen-preset#readme",
   "repository": {
@@ -37,7 +37,6 @@
     }
   },
   "scripts": {
-    "lint": "eslint .",
     "build": "pnpm tsc -p ./tsconfig.build.json && pnpm rollup",
     "tsc": "tsc",
     "test": "jest",
@@ -77,10 +76,10 @@
     "@graphql-codegen/typescript": "^5.0.9",
     "@parcel/watcher": "^2.5.6",
     "@shopify/graphql-codegen": "^0.1.0",
-    "graphql": "^16.13.2"
+    "graphql": "^16.14.1"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.29.2",
+    "@babel/preset-env": "^7.29.7",
     "@graphql-codegen/plugin-helpers": "^6.2.0",
     "@shopify/babel-preset": "^25.0.2",
     "graphql-config": "^5.1.6",

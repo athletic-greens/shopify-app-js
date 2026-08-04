@@ -80,8 +80,7 @@ export function authStrategyFactory<ConfigArg extends AppConfigArg>({
   }
 
   type AdminContextBase =
-    | EmbeddedAdminContext<ConfigArg>
-    | NonEmbeddedAdminContext<ConfigArg>;
+    EmbeddedAdminContext<ConfigArg> | NonEmbeddedAdminContext<ConfigArg>;
 
   function createContext(
     request: Request,
@@ -157,12 +156,10 @@ export function authStrategyFactory<ConfigArg extends AppConfigArg>({
         await ensureSessionTokenSearchParamIfRequired(params, request);
       }
 
-      logger.info('Authenticating admin request', {
-        shop: getShopFromRequest(request),
-      });
-
       const {payload, shop, sessionId, sessionToken} =
         await getSessionTokenContext(params, request);
+
+      logger.info('Authenticating admin request', {shop});
 
       logger.debug('Loading session from storage', {shop, sessionId});
       const existingSession = sessionId

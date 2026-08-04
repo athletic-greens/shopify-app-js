@@ -19,14 +19,39 @@ type HeadersObject = Record<string, string | string[]>;
 
 export type {HeadersObject as Headers};
 
+export interface GraphQLError {
+  message: string;
+  locations?: {line: number; column: number}[];
+  path?: (string | number)[];
+  extensions?: {
+    code?: string;
+    [key: string]: any;
+  };
+}
+
 export interface ResponseErrors {
   networkStatusCode?: number;
   message?: string;
-  graphQLErrors?: any[];
+  graphQLErrors?: GraphQLError[];
   response?: Response;
 }
 
-export type GQLExtensions = Record<string, any>;
+export interface GQLExtensions {
+  cost?: {
+    requestedQueryCost?: number;
+    actualQueryCost?: number | null;
+    throttleStatus?: {
+      maximumAvailable?: number;
+      currentlyAvailable?: number;
+      restoreRate?: number;
+    };
+  };
+  context?: {
+    country?: string;
+    language?: string;
+  };
+  [key: string]: any;
+}
 
 export interface FetchResponseBody<TData = any> {
   data?: TData;
@@ -80,9 +105,7 @@ export interface HTTPRetryLog extends LogContent {
 }
 
 export type LogContentTypes =
-  | HTTPResponseLog
-  | HTTPRetryLog
-  | HTTPResponseGraphQLDeprecationNotice;
+  HTTPResponseLog | HTTPRetryLog | HTTPResponseGraphQLDeprecationNotice;
 
 export type Logger<TLogContentTypes = LogContentTypes> = (
   logContent: TLogContentTypes,
@@ -103,12 +126,12 @@ export interface ClientConfig {
 }
 
 export interface RequestOptions {
-  variables?: OperationVariables;
-  url?: string;
-  headers?: HeadersObject;
-  retries?: number;
-  keepalive?: boolean;
-  signal?: AbortSignal;
+  readonly variables?: OperationVariables;
+  readonly url?: string;
+  readonly headers?: HeadersObject;
+  readonly retries?: number;
+  readonly keepalive?: boolean;
+  readonly signal?: AbortSignal;
 }
 
 export type RequestParams = [operation: string, options?: RequestOptions];

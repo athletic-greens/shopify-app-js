@@ -119,26 +119,6 @@ interface Context<Topics = string | number | symbol> {
   webhookType: WebhookTypeValue;
 
   /**
-   * The sub-topic of the webhook. Only available for traditional webhooks.
-   *
-   * @example
-   * <caption>Webhook sub-topic.</caption>
-   * <description>Get the webhook sub-topic.</description>
-   * ```ts
-   * // /app/routes/webhooks.tsx
-   * import { ActionFunctionArgs } from "@remix-run/node";
-   * import { authenticate } from "../shopify.server";
-   *
-   * export const action = async ({ request }: ActionFunctionArgs) => {
-   *   const { subTopic } = await authenticate.webhook(request);
-   *   return new Response();
-   * };
-   * ```
-   *
-   */
-  subTopic?: string;
-
-  /**
    * The name assigned to the webhook subscription. Only available for traditional webhooks.
    */
   name?: string;
@@ -255,8 +235,7 @@ export interface WebhookContextWithSession<
 }
 
 export type WebhookContext<Topics = string | number | symbol> =
-  | WebhookContextWithoutSession<Topics>
-  | WebhookContextWithSession<Topics>;
+  WebhookContextWithoutSession<Topics> | WebhookContextWithSession<Topics>;
 
 /**
  * Verifies requests coming from Shopify webhooks.

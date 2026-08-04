@@ -6,8 +6,9 @@ import {ApiVersion, Session} from '@shopify/shopify-api';
 import {SignJWT} from 'jose';
 
 import {
-  createTestHmac,
+  createSignedCookieHeader,
   mockShopifyResponse,
+  mockShopifyResponses,
   shopify,
   SHOPIFY_HOST,
 } from '../../__tests__/test-helper';
@@ -225,12 +226,84 @@ describe('validateAuthenticatedSession', () => {
 
       expect((response.error as any).text).toBe('Storage error');
     });
+
+    it('redirects to auth if Shopify returns a 503 during token validation', async () => {
+      mockShopifyResponse({errors: 'Service Unavailable'}, {status: 503});
+
+      const response = await request(app)
+        .get('/test/shop?shop=my-shop.myshopify.io')
+        .set({Authorization: `Bearer ${validJWT}`})
+        .expect(403);
+
+      expect(
+        response.headers['x-shopify-api-request-failure-reauthorize'],
+      ).toBe('1');
+      expect(
+        response.headers['x-shopify-api-request-failure-reauthorize-url'],
+      ).toBe(`/api/auth?shop=my-shop.myshopify.io`);
+    });
+
+    describe('with expiring offline access tokens', () => {
+      const scopes = 'testScope';
+
+      beforeEach(async () => {
+        shopify.config.future = {expiringOfflineAccessTokens: true};
+        session.scope = scopes;
+        session.expires = new Date(Date.now() + 60 * 1000);
+        session.refreshToken = 'a-refresh-token';
+        await shopify.config.sessionStorage.storeSession(session);
+      });
+
+      it('refreshes the offline token before use and stores the new session', async () => {
+        mockShopifyResponses(
+          [
+            {
+              access_token: 'new-access-token',
+              scope: scopes,
+              expires_in: 3600,
+              refresh_token: 'new-refresh-token',
+              refresh_token_expires_in: 86400,
+            },
+          ],
+          [{data: {shop: {name: shop}}}],
+        );
+
+        await request(app)
+          .get('/test/shop?shop=my-shop.myshopify.io')
+          .set('Authorization', `Bearer ${validJWT}`)
+          .expect(200);
+
+        const stored =
+          await shopify.config.sessionStorage.loadSession(sessionId);
+        expect(stored?.accessToken).toBe('new-access-token');
+        expect(stored?.refreshToken).toBe('new-refresh-token');
+      });
+
+      it('logs and continues when the refresh fails', async () => {
+        const loggerSpy = jest.spyOn(shopify.config.logger, 'error');
+
+        mockShopifyResponses(
+          [{error: 'invalid_grant'}, {status: 400}],
+          [{data: {shop: {name: shop}}}],
+        );
+
+        await request(app)
+          .get('/test/shop?shop=my-shop.myshopify.io')
+          .set('Authorization', `Bearer ${validJWT}`)
+          .expect(200);
+
+        expect(loggerSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to refresh offline access token'),
+          expect.objectContaining({shop}),
+        );
+      });
+    });
   });
 
   describe('for non-embedded apps', () => {
     let validCookies: string[];
 
-    beforeEach(() => {
+    beforeEach(async () => {
       shopify.api.config.isEmbeddedApp = false;
 
       app = express();
@@ -239,13 +312,11 @@ describe('validateAuthenticatedSession', () => {
         res.json({data: {shop: {name: req.query.shop}}});
       });
 
-      validCookies = [
-        `shopify_app_session=${sessionId}`,
-        `shopify_app_session.sig=${createTestHmac(
-          shopify.api.config.apiSecretKey,
-          sessionId,
-        )}`,
-      ];
+      validCookies = await createSignedCookieHeader(
+        shopify.api.config.apiSecretKey,
+        'shopify_app_session',
+        sessionId,
+      );
       const scopes = shopify.api.config.scopes
         ? shopify.api.config.scopes.toString()
         : '';
@@ -275,7 +346,7 @@ describe('validateAuthenticatedSession', () => {
 
       expect({
         method: 'POST',
-        url: `https://my-shop.myshopify.io/admin/api/${ApiVersion.July25}/graphql.json`,
+        url: `https://my-shop.myshopify.io/admin/api/${ApiVersion.July26}/graphql.json`,
       }).toMatchMadeHttpRequest();
 
       expect(response.body).toEqual({

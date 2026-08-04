@@ -29,7 +29,7 @@ it('scopes api is available without any future flags', async () => {
   const session = await setUpValidSession(shopify.sessionStorage);
 
   const request = new Request(`${APP_URL}/scopes`);
-  signRequestCookie({
+  await signRequestCookie({
     request,
     cookieName: SESSION_COOKIE_NAME,
     cookieValue: session.id,
@@ -77,7 +77,7 @@ it('when the shop is invalid the query to check the granted scopes returns an er
   const {scopes, session} = await setUpNonEmbeddedFlow();
   session.shop = `${TEST_SHOP_NAME}.invalid-domain.com`;
   await mockGraphqlRequest(
-    ApiVersion.July25,
+    ApiVersion.July26,
     session.shop,
   )({
     status: 400,

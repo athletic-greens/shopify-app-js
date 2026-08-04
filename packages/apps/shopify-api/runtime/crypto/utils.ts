@@ -2,20 +2,29 @@ import {ShopifyError} from '../../lib/error';
 
 import {HashFormat} from './types';
 
+type HMACSecret = string | ArrayBuffer;
+
+const enc = new TextEncoder();
+
+function getCryptoLib(): Crypto {
+  return typeof (crypto as any)?.webcrypto === 'undefined'
+    ? crypto
+    : (crypto as any).webcrypto;
+}
+
+function hmacKeyData(secret: HMACSecret): BufferSource {
+  return typeof secret === 'string' ? enc.encode(secret) : secret;
+}
+
 export async function createSHA256HMAC(
-  secret: string,
+  secret: HMACSecret,
   payload: string,
   returnFormat: HashFormat = HashFormat.Base64,
 ): Promise<string> {
-  const cryptoLib =
-    typeof (crypto as any)?.webcrypto === 'undefined'
-      ? crypto
-      : (crypto as any).webcrypto;
-
-  const enc = new TextEncoder();
+  const cryptoLib = getCryptoLib();
   const key = await cryptoLib.subtle.importKey(
     'raw',
-    enc.encode(secret),
+    hmacKeyData(secret),
     {
       name: 'HMAC',
       hash: {name: 'SHA-256'},
@@ -34,6 +43,31 @@ export async function createSHA256HMAC(
     : asHex(signature);
 }
 
+export async function deriveSHA256HMACKey(
+  secret: string,
+  info: string,
+): Promise<ArrayBuffer> {
+  const cryptoLib = getCryptoLib();
+  const keyMaterial = await cryptoLib.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    'HKDF',
+    false,
+    ['deriveBits'],
+  );
+
+  return cryptoLib.subtle.deriveBits(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: new Uint8Array(0),
+      info: enc.encode(info),
+    },
+    keyMaterial,
+    256,
+  );
+}
+
 export function asHex(buffer: ArrayBuffer | Uint8Array): string {
   return [...new Uint8Array(buffer)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -46,7 +80,7 @@ export function asBase64(buffer: ArrayBuffer | Uint8Array): string {
   let output = '';
 
   const input = new Uint8Array(buffer);
-  for (let i = 0; i < input.length; ) {
+  for (let i = 0; i < input.length;) {
     const byte1 = input[i++];
     const byte2 = input[i++];
     const byte3 = input[i++];

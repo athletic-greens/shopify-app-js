@@ -53,7 +53,7 @@ export function validateConfig<Params extends ConfigParams>(
     throw new ShopifyError(
       `Cannot initialize Shopify API Library. Missing values for: ${missing.join(
         ', ',
-      )}. For apiVersion, please specify an explicit API version (e.g., ApiVersion.July25). See https://shopify.dev/docs/api/usage/versioning for more information.`,
+      )}. For apiVersion, please specify an explicit API version (e.g., ApiVersion.July26). See https://shopify.dev/docs/api/usage/versioning for more information.`,
     );
   }
 
@@ -85,7 +85,7 @@ export function validateConfig<Params extends ConfigParams>(
     isCustomStoreApp: isCustomStoreApp ?? config.isCustomStoreApp,
     adminApiAccessToken: adminApiAccessToken ?? config.adminApiAccessToken,
     userAgentPrefix: userAgentPrefix ?? config.userAgentPrefix,
-    logger: {...config.logger, ...(logger || {})},
+    logger: {...config.logger, ...logger},
     privateAppStorefrontAccessToken:
       privateAppStorefrontAccessToken ?? config.privateAppStorefrontAccessToken,
     billing: billing ?? config.billing,

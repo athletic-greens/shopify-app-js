@@ -14,6 +14,7 @@ export enum ApiVersion {
   January26 = '2026-01',
   April26 = '2026-04',
   July26 = '2026-07',
+  October26 = '2026-10',
   Unstable = 'unstable',
 }
 
@@ -26,7 +27,6 @@ export enum ShopifyHeader {
   Domain = 'X-Shopify-Shop-Domain',
   Hmac = 'X-Shopify-Hmac-Sha256',
   Topic = 'X-Shopify-Topic',
-  SubTopic = 'X-Shopify-Sub-Topic',
   WebhookId = 'X-Shopify-Webhook-Id',
   Name = 'X-Shopify-Name',
   TriggeredAt = 'X-Shopify-Triggered-At',

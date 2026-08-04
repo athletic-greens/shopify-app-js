@@ -10,7 +10,6 @@ import {WebhookHandlersParam} from '../../webhooks/types';
 import {AppInstallations} from '../../app-installations';
 import {
   BASE64_HOST,
-  createTestHmac,
   MockBody,
   mockShopifyResponse,
   mockShopifyResponses,
@@ -114,7 +113,13 @@ describe('OAuth integration tests', () => {
 
       const callbackInfo = await beginOAuth(app, shopify, config);
 
-      await completeOAuth(app, shopify, config, callbackInfo, afterAuth);
+      const sessionCookies = await completeOAuth(
+        app,
+        shopify,
+        config,
+        callbackInfo,
+        afterAuth,
+      );
 
       assertOAuthRequests(shopify, config, callbackInfo);
 
@@ -125,13 +130,15 @@ describe('OAuth integration tests', () => {
         TEST_SHOP,
         body,
         TEST_WEBHOOK_ID,
-        ApiVersion.July25,
+        ApiVersion.July26,
         undefined,
       );
 
       await installedRequest(app, config, installedMock);
 
-      await validSession(app, shopify, config, authedMock);
+      await validSession(app, shopify, config, authedMock, sessionCookies);
+
+      await forgedAppUninstalledWebhookRequest(app, shopify, callbackInfo);
 
       await appUninstalledWebhookRequest(app, shopify);
     });
@@ -225,6 +232,8 @@ async function completeOAuth(
   }
 
   expect(afterAuth).toHaveBeenCalledTimes(1);
+
+  return callbackResponse.headers['set-cookie'] ?? [];
 }
 
 function assertOAuthBeginRedirectUrl(
@@ -246,7 +255,9 @@ function assertOAuthBeginRedirectUrl(
     ? shopify.api.config.scopes.toString()
     : '';
   expect(url.searchParams.get('scope')).toEqual(scopes);
-  expect(url.searchParams.get('state')).toEqual(expect.stringMatching(/.{15}/));
+  expect(url.searchParams.get('state')).toEqual(
+    expect.stringMatching(/^[a-f0-9]{64}$/),
+  );
 
   if (isOnline) {
     expect(url.searchParams.get('grant_options[]')).toEqual('per-user');
@@ -334,7 +345,7 @@ function assertOAuthRequests(
   webhookQueries.forEach((query) =>
     expect({
       method: 'POST',
-      url: `https://${TEST_SHOP}/admin/api/${ApiVersion.July25}/graphql.json`,
+      url: `https://${TEST_SHOP}/admin/api/${ApiVersion.July26}/graphql.json`,
       body: expect.objectContaining({query: expect.stringContaining(query)}),
     }).toMatchMadeHttpRequest(),
   );
@@ -369,6 +380,34 @@ async function webhookProcessRequest(
     LogSeverity.Info,
     expect.stringContaining('Webhook processed, returned status code 200'),
   );
+}
+
+async function forgedAppUninstalledWebhookRequest(
+  app: Express,
+  shopify: ShopifyApp,
+  callbackInfo: CallbackInfo,
+) {
+  const state = callbackInfo.params.get('state')!;
+  const cookieSignature = callbackInfo.cookies
+    .find((cookie) => cookie.startsWith('shopify_app_state.sig='))!
+    .replace('shopify_app_state.sig=', '');
+  const appInstallations = new AppInstallations(shopify.config);
+
+  expect(await appInstallations.includes(TEST_SHOP)).toBe(true);
+
+  await request(app)
+    .post('/test/webhooks')
+    .set({
+      'X-Shopify-Topic': 'APP_UNINSTALLED',
+      'X-Shopify-Shop-Domain': TEST_SHOP,
+      'X-Shopify-Hmac-Sha256': cookieSignature,
+      'X-Shopify-Webhook-Id': TEST_WEBHOOK_ID,
+      'X-Shopify-Api-Version': ApiVersion.July26,
+    })
+    .send(state)
+    .expect(401);
+
+  expect(await appInstallations.includes(TEST_SHOP)).toBe(true);
 }
 
 async function appUninstalledWebhookRequest(app: Express, shopify: ShopifyApp) {
@@ -407,6 +446,7 @@ async function validSession(
   shopify: ShopifyApp,
   config: OAuthTestCase,
   mock: jest.Mock,
+  sessionCookies: string[],
 ) {
   const validJWT = await new SignJWT({
     sub: '1234',
@@ -420,16 +460,7 @@ async function validSession(
   if (config.embedded) {
     headers.Authorization = `Bearer ${validJWT}`;
   } else {
-    const session = (
-      await shopify.config.sessionStorage.findSessionsByShop!(TEST_SHOP)
-    )[0];
-    headers.Cookie = [
-      `shopify_app_session=${session.id}`,
-      `shopify_app_session.sig=${createTestHmac(
-        shopify.api.config.apiSecretKey,
-        session.id,
-      )}`,
-    ].join(';');
+    headers.Cookie = sessionCookies;
   }
 
   mockShopifyResponse({data: {shop: {name: TEST_SHOP}}});

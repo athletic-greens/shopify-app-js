@@ -12,6 +12,7 @@ export type CustomerApiClientLogContentTypes = ApiClientLogContentTypes;
 
 export interface CustomerApiClientConfig {
   storeDomain: string;
+  apiVersion?: string;
   clientId: string;
   clientSecret?: string;
   redirectUri: string;
@@ -21,6 +22,8 @@ export interface CustomerApiClientConfig {
 
 export interface CustomerApiClientOptions {
   storeDomain: string;
+  /** The default API version to use for all requests (e.g. `'2026-01'`). Can be overridden per request via `options.apiVersion`. */
+  apiVersion?: string;
   clientId: string;
   /** Optional client secret for confidential clients (server-side apps). When provided, the client uses Basic Auth on token requests and omits PKCE. */
   clientSecret?: string;
@@ -71,13 +74,13 @@ export interface RefreshTokenParams {
 }
 
 /** Base request options without variables (variables are typed per-operation). */
-export type CustomerRequestBaseOptions = {
+export interface CustomerRequestBaseOptions {
   customerAccessToken?: string;
   headers?: Record<string, string>;
   apiVersion?: string;
   retries?: number;
   signal?: AbortSignal;
-};
+}
 
 /** Full request options — used when the operation is not in the type registry. */
 export type CustomerRequestOptions = CustomerRequestBaseOptions & {
@@ -111,7 +114,9 @@ export type CustomerApiClientRequest<
   operation: Operation,
   options?: CustomerApiClientRequestOptions<Operation, Operations>,
 ) => Promise<
-  ClientResponse<TData extends undefined ? ReturnData<Operation, Operations> : TData>
+  ClientResponse<
+    TData extends undefined ? ReturnData<Operation, Operations> : TData
+  >
 >;
 
 export type CustomerApiClientFetch<

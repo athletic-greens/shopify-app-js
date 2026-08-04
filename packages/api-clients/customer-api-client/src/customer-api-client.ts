@@ -1,8 +1,11 @@
-import {createGraphQLClient, validateDomainAndGetStoreUrl} from '@shopify/graphql-client';
+import {
+  createGraphQLClient,
+  validateDomainAndGetStoreUrl,
+} from '@shopify/graphql-client';
 
 import {
-  AUTHORIZATION_HEADER,
   API_DISCOVERY_PATH,
+  AUTHORIZATION_HEADER,
   CLIENT,
   DEFAULT_CONTENT_TYPE,
   DEFAULT_SCOPE,
@@ -11,7 +14,11 @@ import {
   SDK_VARIANT_SOURCE_HEADER,
   SDK_VERSION_HEADER,
 } from './constants';
-import {generateCodeChallenge, generateCodeVerifier, generateRandomString} from './pkce';
+import {
+  generateCodeChallenge,
+  generateCodeVerifier,
+  generateRandomString,
+} from './pkce';
 import {
   CustomFetchApi,
   CustomerApiClient,
@@ -34,6 +41,7 @@ import {
 
 export function createCustomerApiClient({
   storeDomain,
+  apiVersion: defaultApiVersion,
   clientId,
   clientSecret,
   redirectUri,
@@ -53,25 +61,25 @@ export function createCustomerApiClient({
   // Kick off both discoveries immediately — do not await
   const oidcPromise: Promise<OidcConfig> = fetchFn(
     `${storeUrl}${OIDC_DISCOVERY_PATH}`,
-  ).then((r) => {
-    if (!r.ok) {
+  ).then((response) => {
+    if (!response.ok) {
       throw new Error(
-        `${CLIENT}: OIDC discovery request failed with status ${r.status}. Ensure the store domain is correct.`,
+        `${CLIENT}: OIDC discovery request failed with status ${response.status}. Ensure the store domain is correct.`,
       );
     }
-    return r.json();
+    return response.json();
   });
 
   const apiUrlPromise: Promise<string> = fetchFn(
     `${storeUrl}${API_DISCOVERY_PATH}`,
   )
-    .then((r) => {
-      if (!r.ok) {
+    .then((response) => {
+      if (!response.ok) {
         throw new Error(
-          `${CLIENT}: API discovery request failed with status ${r.status}. Ensure the store domain is correct.`,
+          `${CLIENT}: API discovery request failed with status ${response.status}. Ensure the store domain is correct.`,
         );
       }
-      return r.json();
+      return response.json();
     })
     .then((data: {graphql_api: string}) => {
       if (!data.graphql_api) {
@@ -85,9 +93,6 @@ export function createCustomerApiClient({
   // Mutable token state (stored in closure, not on frozen config)
   let tokens: CustomerTokenSet | null = null;
 
-  // Lazily created and cached graphql client (created after API URL discovery)
-  let cachedGraphqlClient: ReturnType<typeof createGraphQLClient> | undefined;
-
   const baseHeaders: Record<string, string> = {
     'Content-Type': DEFAULT_CONTENT_TYPE,
     Accept: DEFAULT_CONTENT_TYPE,
@@ -96,6 +101,7 @@ export function createCustomerApiClient({
 
   const config: CustomerApiClientConfig = {
     storeDomain: storeUrl,
+    ...(defaultApiVersion ? {apiVersion: defaultApiVersion} : {}),
     clientId,
     ...(clientSecret ? {clientSecret} : {}),
     redirectUri,
@@ -115,19 +121,18 @@ export function createCustomerApiClient({
     return fetchFn(url, init);
   };
 
-  async function getGraphqlClient() {
-    if (!cachedGraphqlClient) {
-      const apiUrl = await apiUrlPromise;
-      cachedGraphqlClient = createGraphQLClient({
+  // Eagerly created (and shared) graphql client promise — resolves once API URL discovery completes.
+  // Using a promise rather than a lazy assignment avoids the request race in concurrent callers.
+  const graphqlClientPromise: Promise<ReturnType<typeof createGraphQLClient>> =
+    apiUrlPromise.then((apiUrl) =>
+      createGraphQLClient({
         headers: baseHeaders,
         url: apiUrl,
         retries,
         customFetchApi: graphqlFetchFn,
         logger,
-      });
-    }
-    return cachedGraphqlClient;
-  }
+      }),
+    );
 
   function resolveAccessToken(options?: CustomerRequestOptions): string {
     const token =
@@ -154,7 +159,7 @@ export function createCustomerApiClient({
     };
 
     if (clientSecret) {
-      headers['Authorization'] = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
+      headers.Authorization = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
     }
 
     const response = await fetchFn(token_endpoint, {
@@ -179,7 +184,7 @@ export function createCustomerApiClient({
     return {
       accessToken: data.access_token,
       ...(data.refresh_token ? {refreshToken: data.refresh_token} : {}),
-      ...(data.expires_in != null ? {expiresIn: data.expires_in} : {}),
+      ...(data.expires_in == null ? {} : {expiresIn: data.expires_in}),
       ...(data.id_token ? {idToken: data.id_token} : {}),
     };
   }
@@ -199,9 +204,12 @@ export function createCustomerApiClient({
       return tokens;
     },
 
-    async getAuthorizationUrl(
-      params?: GetAuthorizationUrlParams,
-    ): Promise<{url: string; codeVerifier?: string; state: string; nonce: string}> {
+    async getAuthorizationUrl(params?: GetAuthorizationUrlParams): Promise<{
+      url: string;
+      codeVerifier?: string;
+      state: string;
+      nonce: string;
+    }> {
       const {authorization_endpoint} = await oidcPromise;
 
       const state = params?.state ?? generateRandomString(16);
@@ -216,8 +224,9 @@ export function createCustomerApiClient({
       url.searchParams.set('state', state);
       url.searchParams.set('nonce', nonce);
 
+      const usePkce = !clientSecret;
       let codeVerifier: string | undefined;
-      if (!clientSecret) {
+      if (usePkce) {
         codeVerifier = await generateCodeVerifier();
         const codeChallenge = await generateCodeChallenge(codeVerifier);
         url.searchParams.set('code_challenge', codeChallenge);
@@ -228,7 +237,10 @@ export function createCustomerApiClient({
     },
 
     async exchangeCode(params: ExchangeCodeParams): Promise<CustomerTokenSet> {
-      if (!clientSecret && !params.codeVerifier) {
+      const isPublicClient = !clientSecret;
+      const missingPublicClientCodeVerifier =
+        isPublicClient && !params.codeVerifier;
+      if (missingPublicClientCodeVerifier) {
         throw new Error(
           `${CLIENT}: codeVerifier is required for public clients. Use the value returned by getAuthorizationUrl().`,
         );
@@ -236,14 +248,16 @@ export function createCustomerApiClient({
 
       const tokenSet = await postToTokenEndpoint({
         grant_type: 'authorization_code',
-        ...(!clientSecret ? {client_id: clientId} : {}),
+        ...(isPublicClient ? {client_id: clientId} : {}),
         redirect_uri: redirectUri,
         code: params.code,
-        ...(!clientSecret && params.codeVerifier
+        ...(isPublicClient && params.codeVerifier
           ? {code_verifier: params.codeVerifier}
           : {}),
       });
 
+      // Token writes are intentionally last-write-wins; concurrent callers are not supported.
+      // eslint-disable-next-line require-atomic-updates
       tokens = tokenSet;
       return tokenSet;
     },
@@ -260,10 +274,12 @@ export function createCustomerApiClient({
 
       const tokenSet = await postToTokenEndpoint({
         grant_type: 'refresh_token',
-        ...(!clientSecret ? {client_id: clientId} : {}),
+        ...(clientSecret ? {} : {client_id: clientId}),
         refresh_token: refreshToken,
       });
 
+      // Token writes are intentionally last-write-wins; concurrent callers are not supported.
+      // eslint-disable-next-line require-atomic-updates
       tokens = tokenSet;
       return tokenSet;
     },
@@ -296,7 +312,7 @@ export function createCustomerApiClient({
       const accessToken = resolveAccessToken(
         options as CustomerRequestOptions | undefined,
       );
-      const graphqlClient = await getGraphqlClient();
+      const graphqlClient = await graphqlClientPromise;
 
       const {
         customerAccessToken: _ignored,
@@ -305,9 +321,10 @@ export function createCustomerApiClient({
         ...restOptions
       } = (options ?? {}) as CustomerRequestOptions;
 
+      const resolvedApiVersion = apiVersion ?? defaultApiVersion;
       const baseUrl = await apiUrlPromise;
-      const url = apiVersion
-        ? replaceVersionInUrl(baseUrl, apiVersion)
+      const url = resolvedApiVersion
+        ? replaceVersionInUrl(baseUrl, resolvedApiVersion)
         : undefined;
 
       return graphqlClient.fetch(operation as string, {
@@ -320,14 +337,17 @@ export function createCustomerApiClient({
       });
     },
 
-    async request<TData = undefined, Operation extends keyof CustomerOperations = string>(
+    async request<
+      TData = undefined,
+      Operation extends keyof CustomerOperations = string,
+    >(
       operation: Operation,
       options?: CustomerApiClientRequestOptions<Operation, CustomerOperations>,
     ) {
       const accessToken = resolveAccessToken(
         options as CustomerRequestOptions | undefined,
       );
-      const graphqlClient = await getGraphqlClient();
+      const graphqlClient = await graphqlClientPromise;
 
       const {
         customerAccessToken: _ignored,
@@ -336,9 +356,10 @@ export function createCustomerApiClient({
         ...restOptions
       } = (options ?? {}) as CustomerRequestOptions;
 
+      const resolvedApiVersion = apiVersion ?? defaultApiVersion;
       const baseUrl = await apiUrlPromise;
-      const url = apiVersion
-        ? replaceVersionInUrl(baseUrl, apiVersion)
+      const url = resolvedApiVersion
+        ? replaceVersionInUrl(baseUrl, resolvedApiVersion)
         : undefined;
 
       return graphqlClient.request<TData>(operation as string, {

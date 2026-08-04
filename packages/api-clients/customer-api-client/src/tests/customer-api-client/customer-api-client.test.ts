@@ -277,8 +277,8 @@ describe('Customer API Client', () => {
         const client = createCustomerApiClient(config);
         await client.exchangeCode(exchangeParams);
 
-        const tokenCall = fetchMock.mock.calls.find(([url]: [string]) =>
-          url === mockOidcConfig.token_endpoint,
+        const tokenCall = fetchMock.mock.calls.find(
+          ([url]: [string]) => url === mockOidcConfig.token_endpoint,
         );
         expect(tokenCall).toBeDefined();
         const [, options] = tokenCall;
@@ -342,8 +342,8 @@ describe('Customer API Client', () => {
 
         await client.refreshToken();
 
-        const tokenCall = fetchMock.mock.calls.find(([url]: [string]) =>
-          url === mockOidcConfig.token_endpoint,
+        const tokenCall = fetchMock.mock.calls.find(
+          ([url]: [string]) => url === mockOidcConfig.token_endpoint,
         );
         const body = new URLSearchParams(tokenCall[1].body);
         expect(body.get('grant_type')).toBe('refresh_token');
@@ -359,8 +359,8 @@ describe('Customer API Client', () => {
 
         await client.refreshToken({refreshToken: 'explicit-refresh'});
 
-        const tokenCall = fetchMock.mock.calls.find(([url]: [string]) =>
-          url === mockOidcConfig.token_endpoint,
+        const tokenCall = fetchMock.mock.calls.find(
+          ([url]: [string]) => url === mockOidcConfig.token_endpoint,
         );
         const body = new URLSearchParams(tokenCall[1].body);
         expect(body.get('refresh_token')).toBe('explicit-refresh');
@@ -417,9 +417,9 @@ describe('Customer API Client', () => {
         const url = await client.getLogoutUrl({
           postLogoutRedirectUri: 'https://myapp.com/goodbye',
         });
-        expect(
-          new URL(url).searchParams.get('post_logout_redirect_uri'),
-        ).toBe('https://myapp.com/goodbye');
+        expect(new URL(url).searchParams.get('post_logout_redirect_uri')).toBe(
+          'https://myapp.com/goodbye',
+        );
       });
     });
 
@@ -507,9 +507,7 @@ describe('Customer API Client', () => {
         await client.fetch(query, {apiVersion: '2024-07'});
 
         const call = (graphqlClientMock.fetch as jest.Mock).mock.calls[0];
-        expect(call[1].url).toBe(
-          `${storeUrl}/customer/api/2024-07/graphql`,
-        );
+        expect(call[1].url).toBe(`${storeUrl}/customer/api/2024-07/graphql`);
       });
     });
 
@@ -623,7 +621,7 @@ describe('Customer API Client', () => {
         );
         const [, options] = tokenCall;
         const expectedBasic = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
-        expect(options.headers['Authorization']).toBe(expectedBasic);
+        expect(options.headers.Authorization).toBe(expectedBasic);
 
         const body = new URLSearchParams(options.body);
         expect(body.has('client_id')).toBe(false);
@@ -659,7 +657,7 @@ describe('Customer API Client', () => {
         );
         const [, options] = tokenCall;
         const expectedBasic = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
-        expect(options.headers['Authorization']).toBe(expectedBasic);
+        expect(options.headers.Authorization).toBe(expectedBasic);
 
         const body = new URLSearchParams(options.body);
         expect(body.has('client_id')).toBe(false);
@@ -700,7 +698,7 @@ describe('Customer API Client', () => {
         ([url]: [string]) => url === mockOidcConfig.token_endpoint,
       );
       const [, options] = tokenCall;
-      expect(options.headers['Authorization']).toBeUndefined();
+      expect(options.headers.Authorization).toBeUndefined();
 
       const body = new URLSearchParams(options.body);
       expect(body.get('client_id')).toBe(clientId);

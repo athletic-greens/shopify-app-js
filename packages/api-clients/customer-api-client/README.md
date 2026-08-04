@@ -75,6 +75,7 @@ The client performs two discovery requests immediately on construction (they are
 | Property        | Type                                                                    | Description                                                                                                                                                                             |
 | --------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | storeDomain     | `string`                                                                | The domain of the store. Can be the Shopify `myshopify.com` domain or a custom store domain.                                                                                            |
+| apiVersion?     | `string`                                                                | The default API version to use for all requests (e.g. `'2026-01'`). Can be overridden per request via `options.apiVersion`.                                                             |
 | clientId        | `string`                                                                | Your app's OAuth client ID.                                                                                                                                                             |
 | clientSecret?   | `string`                                                                | Your app's OAuth client secret. When provided, the client operates as a **confidential client**: token requests use `Authorization: Basic` instead of PKCE, and `code_challenge` is omitted from the authorization URL. **Never expose this value in a browser environment.** |
 | redirectUri     | `string`                                                                | The URI to redirect to after authorization. Must match one of the redirect URIs configured for your app.                                                                                |
@@ -103,6 +104,7 @@ The client performs two discovery requests immediately on construction (they are
 | Name          | Type                       | Description                                                      |
 | ------------- | -------------------------- | ---------------------------------------------------------------- |
 | storeDomain   | `string`                   | The normalized store domain URL                                  |
+| apiVersion?   | `string`                   | The default API version set at initialization                    |
 | clientId      | `string`                   | The OAuth client ID                                              |
 | clientSecret? | `string`                   | The OAuth client secret (confidential clients only)              |
 | redirectUri   | `string`                   | The OAuth redirect URI                                           |
@@ -294,7 +296,21 @@ const logoutUrl = await client.getLogoutUrl({
 window.location.href = logoutUrl;
 ```
 
-### Dynamically set the API version per request
+### Set a default API version at initialization
+
+```typescript
+const client = createCustomerApiClient({
+  storeDomain: 'your-shop-name.myshopify.com',
+  clientId: 'your-oauth-client-id',
+  redirectUri: 'https://your-app.example.com/auth/callback',
+  apiVersion: '2026-01',
+});
+
+// All requests use '2026-01' unless overridden
+const {data, errors} = await client.request(orderQuery);
+```
+
+### Override the API version for a single request
 
 ```typescript
 const {data, errors} = await client.request(orderQuery, {

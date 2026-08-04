@@ -1,7 +1,7 @@
 function base64UrlEncode(bytes: Uint8Array): string {
   // btoa is available in browsers and Node 18+
   const base64 = btoa(String.fromCharCode(...bytes));
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/[=]/g, '');
 }
 
 export function generateRandomString(byteLength = 32): string {

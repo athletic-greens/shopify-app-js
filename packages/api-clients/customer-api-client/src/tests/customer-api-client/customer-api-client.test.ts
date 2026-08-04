@@ -555,6 +555,104 @@ describe('Customer API Client', () => {
         );
       });
     });
+
+    // Both discoveries are kicked off at construction but each is only awaited
+    // by the methods that need it, so an unused one that rejects used to escape
+    // as an unhandled rejection and take down the page.
+    describe('discovery failures', () => {
+      const nonJsonResponse = () => ({
+        ok: true,
+        status: 200,
+        // What mobile Safari does with an intercepted/cached non-JSON body.
+        json: () => {
+          const error = new Error(
+            'The string did not match the expected pattern.',
+          );
+          error.name = 'SyntaxError';
+          return Promise.reject(error);
+        },
+      });
+
+      it('does not leave an unused failed OIDC discovery unhandled', async () => {
+        fetchMock.mockImplementation((url: string) => {
+          if (url.endsWith(OIDC_DISCOVERY_PATH)) {
+            return Promise.resolve(nonJsonResponse());
+          }
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({graphql_api: discoveredGraphqlUrl}),
+          });
+        });
+
+        const unhandled: unknown[] = [];
+        const onUnhandled = (reason: unknown) => unhandled.push(reason);
+        process.on('unhandledRejection', onUnhandled);
+
+        try {
+          // A client used only for request() never awaits oidcPromise.
+          (graphqlClientMock.request as jest.Mock).mockResolvedValue({
+            data: {},
+          });
+          const client = createCustomerApiClient(config);
+          client.setTokens({accessToken: 'token'});
+          await client.request('{ customer { id } }');
+
+          // Let the rejection settle and any unhandled-rejection fire.
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        } finally {
+          process.off('unhandledRejection', onUnhandled);
+        }
+
+        expect(unhandled).toEqual([]);
+      });
+
+      it('still rejects for callers that do await the failed discovery', async () => {
+        fetchMock.mockImplementation((url: string) => {
+          if (url.endsWith(OIDC_DISCOVERY_PATH)) {
+            return Promise.resolve(nonJsonResponse());
+          }
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({graphql_api: discoveredGraphqlUrl}),
+          });
+        });
+
+        const client = createCustomerApiClient(config);
+
+        await expect(client.getAuthorizationUrl()).rejects.toThrow(
+          /OIDC discovery response was not valid JSON/,
+        );
+      });
+
+      it('names the discovery and keeps the original error as cause', async () => {
+        fetchMock.mockImplementation((url: string) => {
+          if (url.endsWith(API_DISCOVERY_PATH)) {
+            return Promise.resolve(nonJsonResponse());
+          }
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockOidcConfig),
+          });
+        });
+
+        const client = createCustomerApiClient(config);
+        client.setTokens({accessToken: 'token'});
+
+        const error = await client
+          .request('{ customer { id } }')
+          .then(() => null)
+          .catch((err: Error) => err);
+
+        expect(error?.message).toMatch(
+          /API discovery response was not valid JSON \(status 200\)/,
+        );
+        // Kept as SyntaxError so callers can classify it as retryable by name.
+        expect(error?.name).toBe('SyntaxError');
+        expect((error?.cause as Error)?.message).toBe(
+          'The string did not match the expected pattern.',
+        );
+      });
+    });
   });
 
   describe('confidential client (clientSecret provided)', () => {

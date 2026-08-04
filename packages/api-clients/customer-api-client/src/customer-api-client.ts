@@ -39,6 +39,32 @@ import {
   validateRequiredStoreDomain,
 } from './validations';
 
+/**
+ * Read a discovery response body as JSON, turning the engine-specific parse
+ * failure into something attributable. Safari rejects `Response.json()` with a
+ * bare DOMException — "The string did not match the expected pattern" — thrown
+ * inside native code, so it reaches error reporting with no JS frames and no
+ * indication of which request produced it.
+ *
+ * `name` stays `SyntaxError` deliberately: callers classify this failure as
+ * retryable by error name, and the original is kept on `cause`.
+ */
+async function parseDiscoveryJson<T>(
+  response: Response,
+  label: 'OIDC' | 'API',
+): Promise<T> {
+  try {
+    return (await response.json()) as T;
+  } catch (cause) {
+    const error = new Error(
+      `${CLIENT}: ${label} discovery response was not valid JSON (status ${response.status}). The body was most likely an intercepted or cached non-JSON response.`,
+      {cause},
+    );
+    error.name = 'SyntaxError';
+    throw error;
+  }
+}
+
 export function createCustomerApiClient({
   storeDomain,
   apiVersion: defaultApiVersion,
@@ -61,25 +87,25 @@ export function createCustomerApiClient({
   // Kick off both discoveries immediately — do not await
   const oidcPromise: Promise<OidcConfig> = fetchFn(
     `${storeUrl}${OIDC_DISCOVERY_PATH}`,
-  ).then((response) => {
+  ).then(async (response) => {
     if (!response.ok) {
       throw new Error(
         `${CLIENT}: OIDC discovery request failed with status ${response.status}. Ensure the store domain is correct.`,
       );
     }
-    return response.json();
+    return parseDiscoveryJson<OidcConfig>(response, 'OIDC');
   });
 
   const apiUrlPromise: Promise<string> = fetchFn(
     `${storeUrl}${API_DISCOVERY_PATH}`,
   )
-    .then((response) => {
+    .then(async (response) => {
       if (!response.ok) {
         throw new Error(
           `${CLIENT}: API discovery request failed with status ${response.status}. Ensure the store domain is correct.`,
         );
       }
-      return response.json();
+      return parseDiscoveryJson<{graphql_api: string}>(response, 'API');
     })
     .then((data: {graphql_api: string}) => {
       if (!data.graphql_api) {
@@ -89,6 +115,20 @@ export function createCustomerApiClient({
       }
       return data.graphql_api;
     });
+
+  // Both discoveries are started eagerly above and are only awaited by the
+  // methods that need them — a client used solely for `request()` never awaits
+  // oidcPromise, and vice versa. Without a handler attached here, a discovery
+  // failure on an unused promise surfaces as an *unhandled* rejection and takes
+  // down the page: on mobile Safari that showed up as a bare
+  // "SyntaxError: The string did not match the expected pattern" with no JS
+  // frames, because the throw happened inside native `Response.json()`.
+  //
+  // Attaching a no-op catch marks each promise as handled without swallowing
+  // anything: every `await`/`then` elsewhere still receives the rejection,
+  // since handlers are per-consumer.
+  oidcPromise.catch(() => {});
+  apiUrlPromise.catch(() => {});
 
   // Mutable token state (stored in closure, not on frozen config)
   let tokens: CustomerTokenSet | null = null;

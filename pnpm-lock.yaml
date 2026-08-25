@@ -151,8 +151,8 @@ importers:
   packages/api-clients/customer-api-client:
     dependencies:
       '@shopify/graphql-client':
-        specifier: ^1.4.1
-        version: link:../graphql-client
+        specifier: ^2.0.0
+        version: 2.0.0
     devDependencies:
       '@babel/preset-env':
         specifier: ^7.28.6
@@ -208,16 +208,16 @@ importers:
     devDependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
 
   packages/apps/session-storage/shopify-app-session-storage-drizzle:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -260,10 +260,10 @@ importers:
         version: 3.996.2(@aws-sdk/client-dynamodb@3.1020.0)
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
     devDependencies:
       '@shopify/shopify-app-session-storage-test-utils':
         specifier: ^5.0.0
@@ -273,10 +273,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       compare-versions:
         specifier: ^6.1.1
         version: 6.1.1
@@ -295,10 +295,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
     devDependencies:
       '@shopify/shopify-app-session-storage-test-utils':
         specifier: ^5.0.0
@@ -308,10 +308,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       mongodb:
         specifier: ^7.1.1
         version: 7.1.1
@@ -324,10 +324,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       mysql2:
         specifier: ^3.20.0
         version: 3.20.0(@types/node@25.6.0)
@@ -340,10 +340,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       pg:
         specifier: ^8.20.0
         version: 8.20.0
@@ -362,10 +362,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
     devDependencies:
       '@prisma/client':
         specifier: ^6.19.0
@@ -381,10 +381,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       redis:
         specifier: ^5.11.0
         version: 5.11.0
@@ -397,10 +397,10 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       sqlite3:
         specifier: ^5.1.7
         version: 5.1.7
@@ -416,10 +416,10 @@ importers:
     devDependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
 
   packages/apps/shopify-api:
     dependencies:
@@ -477,13 +477,13 @@ importers:
     dependencies:
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../session-storage/shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       '@shopify/shopify-app-session-storage-memory':
         specifier: ^6.0.0
-        version: link:../session-storage/shopify-app-session-storage-memory
+        version: 6.0.1(@shopify/shopify-api@13.1.0)(@shopify/shopify-app-session-storage@5.0.1(@shopify/shopify-api@13.1.0))
       compare-versions:
         specifier: ^6.1.1
         version: 6.1.1
@@ -511,10 +511,10 @@ importers:
         version: link:../../api-clients/admin-api-client
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../session-storage/shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       '@shopify/storefront-api-client':
         specifier: ^1.0.10
         version: link:../../api-clients/storefront-api-client
@@ -542,7 +542,7 @@ importers:
         version: 6.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@shopify/shopify-app-session-storage-memory':
         specifier: ^6.0.0
-        version: link:../session-storage/shopify-app-session-storage-memory
+        version: 6.0.1(@shopify/shopify-api@13.1.0)(@shopify/shopify-app-session-storage@5.0.1(@shopify/shopify-api@13.1.0))
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -563,10 +563,10 @@ importers:
         version: link:../../api-clients/admin-api-client
       '@shopify/shopify-api':
         specifier: ^13.0.0
-        version: link:../shopify-api
+        version: 13.1.0
       '@shopify/shopify-app-session-storage':
         specifier: ^5.0.0
-        version: link:../session-storage/shopify-app-session-storage
+        version: 5.0.1(@shopify/shopify-api@13.1.0)
       '@shopify/storefront-api-client':
         specifier: ^1.0.10
         version: link:../../api-clients/storefront-api-client
@@ -603,7 +603,7 @@ importers:
         version: 6.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@shopify/shopify-app-session-storage-memory':
         specifier: ^6.0.0
-        version: link:../session-storage/shopify-app-session-storage-memory
+        version: 6.0.1(@shopify/shopify-api@13.1.0)(@shopify/shopify-app-session-storage@5.0.1(@shopify/shopify-api@13.1.0))
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -1722,11 +1722,11 @@ packages:
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild-kit/esm-loader@2.6.5':
     resolution: {integrity: sha512-FxEMIkJKnodyA1OaCUoEvbYRkoZlLZ4d/eXFu9Fh8CbBBgP5EmZxrfTRyN0qpXZ4vOvqnE5YdRdcrmUUXuU+dA==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild/aix-ppc64@0.25.12':
     resolution: {integrity: sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==}
@@ -3902,6 +3902,9 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
+  '@shopify/admin-api-client@1.1.2':
+    resolution: {integrity: sha512-sV5gS8x4kj0KLULlOJkoBzm+tu6tn+1PCK9a6inySv5qtzmf/JxDWtLgaW9vRXeXHo/Sl/p3mBWhY3//fKA8iw==}
+
   '@shopify/babel-preset@25.0.2':
     resolution: {integrity: sha512-pvcqU1Pfl779OPKYY9RH4cY4gZnw2lds7oS3YHIcJZvqo/d7DMOhSMsMA28n0iz026Cq3rjAjfYgiDA87Z81DA==}
 
@@ -3913,6 +3916,12 @@ packages:
   '@shopify/generate-docs@1.2.0':
     resolution: {integrity: sha512-/+wkOWH0o9ZdXQhNbyYOqxTucHTisubVzHAHDhTqOzxcvDuPLfveShLzMEzTWgYx9x8ORwirOWI+dYBulVvs9w==}
     hasBin: true
+
+  '@shopify/graphql-client@1.4.2':
+    resolution: {integrity: sha512-C/fEyx6BZmTGeJv0HSsduhfn5ZbkXk0nePkyo0+xXxorP1I+uvx9pobdFxTfiPnOrh+P6QiKzBgIviksnSo4YA==}
+
+  '@shopify/graphql-client@2.0.0':
+    resolution: {integrity: sha512-SfIZa6J9Px4ZSMIVdPLNupeSyqznovV6pDVxwC1rmbi0JTVj2q/CCsOf9hLQvsMdBiyJDHVnoVHGpBzlhpwO2Q==}
 
   '@shopify/graphql-codegen@0.1.0':
     resolution: {integrity: sha512-G3sSesLj7Czt/J2Bj+XlQ8u4pkfQEt32hsjoS3UGZlf1eAiVw0aBBddp+NI5HqBAi0gM/f7GLRAhG3kktPhZmA==}
@@ -3936,6 +3945,7 @@ packages:
   '@shopify/polaris@12.27.0':
     resolution: {integrity: sha512-Y8yus6iEjcfW2ZtEJtlqxbWeDJqTX3S/MOLH4GWRvU5gFYJQhlaHaETs0+OimbhEpO95mXbY8qB+KnIJaVBHwA==}
     engines: {node: ^16.17.0 || >=18.12.0}
+    deprecated: 'Polaris React is deprecated and no longer maintained. For building Shopify admin experiences, use Polaris web components: https://shopify.dev/docs/api/polaris — archived docs for this package: https://shopify.github.io/polaris-react-archive/'
     peerDependencies:
       react: ^18.0.0
       react-dom: ^18.0.0
@@ -3950,6 +3960,24 @@ packages:
     peerDependencies:
       react: '>=18.0.0 <19.0.0'
       react-dom: '>=16.8.0 <19.0.0'
+
+  '@shopify/shopify-api@13.1.0':
+    resolution: {integrity: sha512-TwYL9kPxOgQwwlc9tmnAmSDs79Gdg9QLaIMCfkaCJxkhWxIHVkPWa74GvbBwnmTtB8jkg61Ja4/Qxrk9bCBUiA==}
+    engines: {node: '>=20.0.0'}
+
+  '@shopify/shopify-app-session-storage-memory@6.0.1':
+    resolution: {integrity: sha512-8NJFaAAA/3PjpDD/zG8/kQVK2+GM5ZdezIMZOZdCJihHLVE6nQ6x1HAVva0dysJD7evZnCymZ/qRhistUVlVRg==}
+    peerDependencies:
+      '@shopify/shopify-api': ^13.0.0
+      '@shopify/shopify-app-session-storage': ^5.0.0
+
+  '@shopify/shopify-app-session-storage@5.0.1':
+    resolution: {integrity: sha512-VL66qkz2w1x5hH14v+swFZAnN36VrFuVi/Lc6FkLTJxCSvSu4fPNYn04kjIxGykgsRb7trLBXC7mF3j8yDUFeA==}
+    peerDependencies:
+      '@shopify/shopify-api': ^13.0.0
+
+  '@shopify/storefront-api-client@1.0.10':
+    resolution: {integrity: sha512-A0ItFW58L5+y/jnnJDEsmt2YcQSt2BG+pNoQOYRpPBJaOLpTj7A13q1QVrE5XYVGZCA6ZQ6FqAtgosHHrkut0Q==}
 
   '@shopify/typescript-configs@5.1.2':
     resolution: {integrity: sha512-QNQlCxJGyKXXbLHsf4y0ZUZhmK/1LL5MN/YHl54UxakDILiBRKiWh0t7qbVo01tsyyH+YcrH7d8y9Ch2ywP8pg==}
@@ -6528,6 +6556,10 @@ packages:
 
   isbot@5.1.36:
     resolution: {integrity: sha512-C/ZtXyJqDPZ7G7JPr06ApWyYoHjYexQbS6hPYD4WYCzpv2Qes6Z+CCEfTX4Owzf+1EJ933PoI2p+B9v7wpGZBQ==}
+    engines: {node: '>=18'}
+
+  isbot@5.2.1:
+    resolution: {integrity: sha512-dJ+LpKyClQZ7NG+j3OensC/mAZkGpukE9YUrgPYvAZj2doVL0edfDgywTUh5CXa0o+nW9a1V9e5+CJTX8+SxRw==}
     engines: {node: '>=18'}
 
   isexe@2.0.0:
@@ -13243,6 +13275,10 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
+  '@shopify/admin-api-client@1.1.2':
+    dependencies:
+      '@shopify/graphql-client': 1.4.2
+
   '@shopify/babel-preset@25.0.2':
     dependencies:
       '@babel/core': 7.27.4
@@ -13307,6 +13343,10 @@ snapshots:
       globby: 11.1.0
       typescript: 5.9.3
 
+  '@shopify/graphql-client@1.4.2': {}
+
+  '@shopify/graphql-client@2.0.0': {}
+
   '@shopify/graphql-codegen@0.1.0(graphql@16.13.2)':
     dependencies:
       '@graphql-codegen/add': 5.0.3(graphql@16.13.2)
@@ -13345,6 +13385,30 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       react-is: 18.3.1
       react-reconciler: 0.28.0(react@18.3.1)
+
+  '@shopify/shopify-api@13.1.0':
+    dependencies:
+      '@shopify/admin-api-client': 1.1.2
+      '@shopify/graphql-client': 1.4.2
+      '@shopify/storefront-api-client': 1.0.10
+      compare-versions: 6.1.1
+      isbot: 5.2.1
+      jose: 5.10.0
+      lossless-json: 4.3.0
+      tslib: 2.8.1
+
+  '@shopify/shopify-app-session-storage-memory@6.0.1(@shopify/shopify-api@13.1.0)(@shopify/shopify-app-session-storage@5.0.1(@shopify/shopify-api@13.1.0))':
+    dependencies:
+      '@shopify/shopify-api': 13.1.0
+      '@shopify/shopify-app-session-storage': 5.0.1(@shopify/shopify-api@13.1.0)
+
+  '@shopify/shopify-app-session-storage@5.0.1(@shopify/shopify-api@13.1.0)':
+    dependencies:
+      '@shopify/shopify-api': 13.1.0
+
+  '@shopify/storefront-api-client@1.0.10':
+    dependencies:
+      '@shopify/graphql-client': 1.4.2
 
   '@shopify/typescript-configs@5.1.2': {}
 
@@ -16309,6 +16373,8 @@ snapshots:
   isarray@2.0.5: {}
 
   isbot@5.1.36: {}
+
+  isbot@5.2.1: {}
 
   isexe@2.0.0: {}
 

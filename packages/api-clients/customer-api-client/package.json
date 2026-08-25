@@ -1,6 +1,6 @@
 {
   "name": "@athleticgreens/customer-api-client",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Shopify Customer API Client - A lightweight JS client to interact with Shopify's Customer Account API",
   "repository": {
     "type": "git",
@@ -89,7 +89,7 @@
     "!node_modules"
   ],
   "dependencies": {
-    "@shopify/graphql-client": "^1.4.1"
+    "@shopify/graphql-client": "^2.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.6",
